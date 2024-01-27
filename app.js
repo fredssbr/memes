@@ -1,55 +1,34 @@
-const express = require('express');
+import express from 'express';
+import { engine } from 'express-handlebars';
 const app = express();
-const hbs = require('hbs');
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const port = process.env.PORT || 3000;
 
-hbs.registerPartials(__dirname + '/views/partials');
 app.set('view engine', 'hbs');
+app.engine( 'hbs', engine({
+  extname: 'hbs',
+  defaultView: 'default',
+  layoutsDir: __dirname  + '/views/layouts/',
+  partialsDir: __dirname  + '/views/partials/',
+  helpers: {
+    getCurrentYear() { return new Date().getFullYear(); },
+    screamIt(text) { return text.toUpperCase(); }
+  }
+}));
 
-app.use(express.static(__dirname + '/public'));
+import { router as homeRouter} from './routes/index.js';
+import { router as aboutRouter} from './routes/about.js';
+import { router as projectsRouter} from './routes/projects.js';
 
-app.use((req, res, next) => {
-  //res.render('maintenance.hbs');
-  next();
-});
-
-app.get('/', (req, res) => {
-  res.render('home.hbs', {
-    pageTitle: 'Welcome to my website',
-    likes: [
-        'Running',
-        'Sleeping (rarely)',
-        'Photography'
-    ]
-  });
-});
-
-app.get('/about', (req, res) => {
-  res.render('about.hbs', {
-      pageTitle: 'About page'
-  });
-});
-
-app.get('/projects', (req, res) => {
-  res.render('projects.hbs', {
-      pageTitle: 'Projects',
-      projects: [
-          'Running ultras',
-          'Playing the piano',
-          'Part-time hitman =) (behave)'
-      ]
-  });
-});
+app.use('/', homeRouter);
+app.use('/about', aboutRouter);
+app.use('/projects', projectsRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`)
-});
-
-//Helpers
-hbs.registerHelper('getCurrentYear', () =>{
-  return new Date().getFullYear();
-});
-
-hbs.registerHelper('screamIt', (text) => {
-  return text.toUpperCase();
 });
